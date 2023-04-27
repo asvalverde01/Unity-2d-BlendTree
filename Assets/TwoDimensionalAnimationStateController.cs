@@ -5,13 +5,15 @@ using UnityEngine;
 public class TwoDimensionalAnimationStateController : MonoBehaviour
 {
     Animator animator;
+    CharacterController characterController;
     float velocityZ = 0.0f;
     float velocityX = 0.0f;
 
     public float acceleration = 2.0f;
-    public float decelaration = 2.0f;
-    public float maximunWalkVelocity = 0.5f;
-    public float maximunRunVelocity = 2.0f;
+    public float deceleration = 2.0f;
+    public float maximumWalkVelocity = 1f;
+    public float maximumRunVelocity = 4.0f;
+    public float rotationSpeed = 360.0f;
 
     int VelocityZHash;
     int VelocityXHash;
@@ -20,17 +22,11 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+        characterController = GetComponent<CharacterController>();
 
         VelocityZHash = Animator.StringToHash("Velocity Z");
         VelocityXHash = Animator.StringToHash("Velocity X");
-
     }
-
-    void changeVelocity(bool forwardPressed, bool leftPressed, bool rightPressed, bool runPressed, float currentMaxtVelocity)
-    {
-        //
-    }
-
 
     // Update is called once per frame
     void Update()
@@ -40,7 +36,7 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
         bool rightPressed = Input.GetKey(KeyCode.D);
         bool runPressed = Input.GetKey(KeyCode.LeftShift);
 
-        float currentMaxtVelocity = runPressed ? maximunRunVelocity : maximunWalkVelocity;
+        float currentMaxtVelocity = runPressed ? maximumRunVelocity : maximumWalkVelocity;
 
 
         if (forwardPressed && velocityZ < currentMaxtVelocity)
@@ -60,7 +56,7 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
 
         if(!forwardPressed && velocityZ > 0.0f)
         {
-            velocityZ -= Time.deltaTime * decelaration;
+            velocityZ -= Time.deltaTime * deceleration;
 
         }
 
@@ -71,12 +67,12 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
 
         if (!leftPressed && velocityX < 0.0f)
         {
-            velocityX += Time.deltaTime * decelaration;
+            velocityX += Time.deltaTime * deceleration;
         }
 
         if (!rightPressed && velocityX > 0.0f)
         {
-            velocityX -= Time.deltaTime * decelaration;
+            velocityX -= Time.deltaTime * deceleration;
         }
 
         //Reset Velocity
@@ -92,7 +88,7 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
         }
         else if (forwardPressed && velocityZ > currentMaxtVelocity)
         {
-            velocityZ -= Time.deltaTime * decelaration;
+            velocityZ -= Time.deltaTime * deceleration;
             if (velocityZ > currentMaxtVelocity && velocityZ < (currentMaxtVelocity + 0.05))
             {
                 velocityZ = currentMaxtVelocity;
@@ -110,7 +106,7 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
         }
         else if (leftPressed && velocityX < -currentMaxtVelocity)
         {
-            velocityX += Time.deltaTime * decelaration;
+            velocityX += Time.deltaTime * deceleration;
             if (velocityX < -currentMaxtVelocity && velocityX > (-currentMaxtVelocity - 0.05))
             {
                 velocityX = -currentMaxtVelocity;
@@ -128,7 +124,7 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
         }
         else if (rightPressed && velocityX < currentMaxtVelocity)
         {
-            velocityX += Time.deltaTime * decelaration;
+            velocityX += Time.deltaTime * deceleration;
             if (velocityX < currentMaxtVelocity && velocityX > (currentMaxtVelocity - 0.05))
             {
                 velocityX = currentMaxtVelocity;
@@ -139,9 +135,16 @@ public class TwoDimensionalAnimationStateController : MonoBehaviour
             velocityX = currentMaxtVelocity;
         }
 
-
-
         animator.SetFloat(VelocityZHash, velocityZ);
         animator.SetFloat(VelocityXHash, velocityX);
+
+        // Move the character
+        Vector3 moveDirection = new Vector3(velocityX, 0, velocityZ);
+        moveDirection = transform.TransformDirection(moveDirection);
+        characterController.Move(moveDirection * Time.deltaTime);
+
+        // Rotate the character based on input
+        float horizontalInput = Input.GetAxis("Horizontal");
+        transform.Rotate(0, horizontalInput * rotationSpeed * Time.deltaTime, 0);
     }
 }
